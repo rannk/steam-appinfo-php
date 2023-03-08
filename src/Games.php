@@ -14,7 +14,7 @@ class Games
 
     public function getAppids($start = 0, $limit = 50, $filter = '')
     {
-        $url = 'https://store.steampowered.com/search/results/?query&start='.$start.'&count='.$limit.'&sort_by=_ASC&filter='.$filter.'&infinite=1&l=zh-cn';
+        $url = 'https://store.steampowered.com/search/results/?query&start='.$start.'&count='.$limit.'&sort_by=_ASC&filter='.$filter.'&infinite=1&l=zh';
         $response = $this->client->get($url);
         if($response->getStatusCode() == 200){
             return $this->anayAppContent($response->getBody()->getContents());
@@ -23,7 +23,7 @@ class Games
 
     public function gameDetail($appid)
     {
-        $url = 'http://store.steampowered.com/api/appdetails?l=zh&appids=' . $appid;
+        $url = 'http://store.steampowered.com/api/appdetails?l=cn&cc=cn&appids=' . $appid;
         $response = $this->client->get($url, ['headers'=>['Accept-Language'=> 'zh-cn;zh']]);
         if($response->getStatusCode() == 200){
             $content = json_decode($response->getBody()->getContents(), true);
