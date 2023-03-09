@@ -62,7 +62,10 @@ class Games
             if(!empty($content) && !empty($content[$appid]) && !empty($content[$appid]['data']['dlc'])){
                 // 批量查DLC的内容
                 foreach($content[$appid]['data']['dlc'] as $dlc){
-                    $content[$dlc] = $this->gameDetail($dlc);
+                    $dlc_cont = $this->gameDetail($dlc);
+                    if(!empty($dlc_cont)){
+                        $content[$dlc] = $dlc_cont[$dlc];
+                    }
                 }
             }
             return $content;
