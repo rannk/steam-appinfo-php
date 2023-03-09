@@ -12,6 +12,14 @@ class Games
         $this->client = new GuzzleClient();
     }
 
+    /**
+     * 获取appids
+     * @param int $start
+     * @param int $limit
+     * @param string $filter 过滤条件，比如热销，传topsellers
+     * @return array
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
     public function getAppids($start = 0, $limit = 50, $filter = '')
     {
         $url = 'https://store.steampowered.com/search/results/?query&start='.$start.'&count='.$limit.'&sort_by=_ASC&filter='.$filter.'&infinite=1&l=zh';
@@ -21,10 +29,34 @@ class Games
         }
     }
 
-    public function gameDetail($appid)
+    /**
+     * 获取游戏详情，如果游戏包含dlc，同时获取dlc信息
+     * @param $appid
+     * @param string $lang 语言
+     * @param string $cc  货币
+     * @return mixed
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function gameDetail($appid, $lang='cn', $cc="cn")
     {
-        $url = 'http://store.steampowered.com/api/appdetails?l=cn&cc=cn&appids=' . $appid;
-        $response = $this->client->get($url, ['headers'=>['Accept-Language'=> 'zh-cn;zh']]);
+        $lang_arr = ['cn' => 'zh-cn;zh'];
+        $params = [];
+        $query = ['appids' => $appid];
+        if(!empty($cc)){
+            $query['cc'] = $cc;
+        }
+
+        if(!empty($lang)){
+            $query['l'] = $lang;
+            if(array_key_exists($lang, $lang_arr)){
+                $params['headers'] = ['Accept-Language'=> $lang_arr[$lang]];
+            }
+        }
+
+        $params['query'] = $query;
+
+        $url = 'http://store.steampowered.com/api/appdetails';
+        $response = $this->client->get($url, $params);
         if($response->getStatusCode() == 200){
             $content = json_decode($response->getBody()->getContents(), true);
             if(!empty($content) && !empty($content[$appid]) && !empty($content[$appid]['data']['dlc'])){
@@ -37,6 +69,12 @@ class Games
         }
     }
 
+    /**
+     * 分析appid接口返回的信息
+     * 获取到apppid， 好评率，评论用户人数
+     * @param $content
+     * @return array
+     */
     public function anayAppContent($content)
     {
         $arr = json_decode($content, true);
