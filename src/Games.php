@@ -3,13 +3,33 @@ namespace Rannk\SteamAppinfoPhp;
 
 use GuzzleHttp\Client as GuzzleClient;
 
+/**
+ * Class Games
+ * @property \Redis $redis
+ * @package Rannk\SteamAppinfoPhp
+ */
 class Games
 {
+    const CACHE_KEY = "_STEAM_APPINFO_PHP_";
     private $client;
+    private $redis;
 
     public function __construct()
     {
         $this->client = new GuzzleClient();
+    }
+
+    public function hasCache($ip="127.0.0.1", $port = "6379", $password="")
+    {
+        $redis = new \Redis();
+        try{
+            $redis->connect($ip, $port, 1);
+            if(!empty($password)){
+                $redis->auth($password);
+            }
+
+            $this->redis = $redis;
+        }catch (\Exception $e){}
     }
 
     /**
@@ -54,22 +74,37 @@ class Games
         }
 
         $params['query'] = $query;
+        $content = "";
+        if(!empty($this->redis)){
+            $content = $this->redis->get(self::CACHE_KEY . $appid);
+        }
 
-        $url = 'http://store.steampowered.com/api/appdetails';
-        $response = $this->client->get($url, $params);
-        if($response->getStatusCode() == 200){
-            $content = json_decode($response->getBody()->getContents(), true);
-            if(!empty($content) && !empty($content[$appid]) && !empty($content[$appid]['data']['dlc'])){
-                // 批量查DLC的内容
-                foreach($content[$appid]['data']['dlc'] as $dlc){
-                    $dlc_cont = $this->gameDetail($dlc);
-                    if(!empty($dlc_cont)){
-                        $content[$dlc] = $dlc_cont[$dlc];
-                    }
+        if(empty($content)){
+            $url = 'https://store.steampowered.com/api/appdetails';
+            $response = $this->client->get($url, $params);
+            if($response->getStatusCode() == 200){
+                $content = json_decode($response->getBody()->getContents(), true);
+
+                // 如果缓存开启
+                if(!empty($this->redis) && !empty($content) && !empty($content[$appid])){
+                    $this->redis->set(self::CACHE_KEY . $appid, json_encode($content), 7200);
                 }
             }
-            return $content;
+        }else{
+            $content = json_decode($content, true);
         }
+
+        if(!empty($content) && !empty($content[$appid]) && !empty($content[$appid]['data']['dlc'])){
+            // 批量查DLC的内容
+            foreach($content[$appid]['data']['dlc'] as $dlc){
+                $dlc_cont = $this->gameDetail($dlc, $lang, $cc);
+                if(!empty($dlc_cont)){
+                    $content[$dlc] = $dlc_cont[$dlc];
+                }
+            }
+        }
+
+        return $content;
     }
 
     /**
