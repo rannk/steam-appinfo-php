@@ -13,6 +13,7 @@ class Games
     const CACHE_KEY = "_STEAM_APPINFO_PHP_";
     private $client;
     private $redis;
+    private $wait_time = 0;
 
     public function __construct()
     {
@@ -30,6 +31,16 @@ class Games
 
             $this->redis = $redis;
         }catch (\Exception $e){}
+    }
+
+    /**
+     * 设置获取dlc之间等待的时间
+     * 主要用于防止频繁抓取被抓
+     * @param $second
+     */
+    public function setWait($second)
+    {
+        $this->wait_time = $second;
     }
 
     /**
@@ -101,6 +112,7 @@ class Games
                 if(!empty($dlc_cont)){
                     $content[$dlc] = $dlc_cont[$dlc];
                 }
+                sleep($this->wait_time);
             }
         }
 
