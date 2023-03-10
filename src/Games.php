@@ -68,7 +68,7 @@ class Games
      * @return mixed
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    public function gameDetail($appid, $lang='cn', $cc="cn")
+    public function gameDetail($appid, $lang='cn', $cc="cn", $type='game')
     {
         $lang_arr = ['cn' => 'zh-cn;zh'];
         $params = [];
@@ -105,10 +105,10 @@ class Games
             $content = json_decode($content, true);
         }
 
-        if(!empty($content) && !empty($content[$appid]) && !empty($content[$appid]['data']['dlc'])){
+        if(!empty($content) && !empty($content[$appid]) && !empty($content[$appid]['data']['dlc']) && $type=='game'){
             // 批量查DLC的内容
             foreach($content[$appid]['data']['dlc'] as $dlc){
-                $dlc_cont = $this->gameDetail($dlc, $lang, $cc);
+                $dlc_cont = $this->gameDetail($dlc, $lang, $cc, 'dlc');
                 if(!empty($dlc_cont)){
                     $content[$dlc] = $dlc_cont[$dlc];
                 }
