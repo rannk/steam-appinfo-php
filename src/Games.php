@@ -107,11 +107,18 @@ class Games
 
         if(!empty($content) && !empty($content[$appid]) && !empty($content[$appid]['data']['dlc']) && $type=='game'){
             // 批量查DLC的内容
+            $catch_dlc_count = 0;
             foreach($content[$appid]['data']['dlc'] as $dlc){
                 $dlc_cont = $this->gameDetail($dlc, $lang, $cc, 'dlc');
                 if(!empty($dlc_cont)){
                     $content[$dlc] = $dlc_cont[$dlc];
                 }
+
+                if($catch_dlc_count >= 100){
+                    break; // dlc只抓100个.
+                }
+
+                $catch_dlc_count++;
                 sleep($this->wait_time);
             }
         }
