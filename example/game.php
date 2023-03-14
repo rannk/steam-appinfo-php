@@ -7,5 +7,5 @@ $obj = new \Rannk\SteamAppinfoPhp\Games();
 //print_r($result);
 
 $obj->hasCache();
-print_r($obj->gameDetail(239140));
+print_r($obj->gameDetailFromSite(386940));
 

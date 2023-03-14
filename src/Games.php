@@ -126,6 +126,36 @@ class Games
         return $content;
     }
 
+    public function gameDetailFromSite($appid)
+    {
+        $content = "";
+        if(!empty($this->redis)){
+            $content = $this->redis->get(self::CACHE_KEY . "_SITE_" . $appid);
+        }
+
+        if(empty($content)){
+            $url = 'https://store.steampowered.com/app/';
+            $response = $this->client->get($url.$appid);
+            if($response->getStatusCode() == 200){
+                $content = $response->getBody()->getContents();
+
+                // 如果缓存开启
+                if(!empty($this->redis) && !empty($content)){
+                    $this->redis->set(self::CACHE_KEY . "_SITE_" . $appid, $content, 7200);
+                }
+            }
+        }
+
+        $anay = new anayAppGame($content);
+
+        $data['reviewSummary'] = $anay->findReviewSummary();
+        $data['reviewRecent'] = $anay->findReviewRecent();
+
+        return $data;
+    }
+
+
+
     /**
      * 分析appid接口返回的信息
      * 获取到apppid， 好评率，评论用户人数
