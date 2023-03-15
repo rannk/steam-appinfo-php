@@ -14,6 +14,7 @@ class Games
     private $client;
     private $redis;
     private $wait_time = 0;
+    private $fee;
 
     public function __construct()
     {
