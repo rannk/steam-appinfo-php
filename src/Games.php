@@ -14,7 +14,7 @@ class Games
     private $client;
     private $redis;
     private $wait_time = 0;
-    private $fee;
+    private $agent;
 
     public function __construct()
     {
@@ -44,6 +44,15 @@ class Games
         $this->wait_time = $second;
     }
 
+    public function setAgent($url, $appid, $secret)
+    {
+        $config['url'] = $url;
+        $config['appid'] = $appid;
+        $config['secret'] = $secret;
+
+        $this->agent = new QyAgentServices($config);
+    }
+
     /**
      * 获取appids
      * @param int $start
@@ -55,7 +64,12 @@ class Games
     public function getAppids($start = 0, $limit = 50, $filter = '')
     {
         $url = 'https://store.steampowered.com/search/results/?query&start='.$start.'&count='.$limit.'&sort_by=_ASC&filter='.$filter.'&infinite=1&l=zh';
-        $response = $this->client->get($url);
+        if(!empty($this->agent)){
+            $response = $this->agent->get($url);
+        }else{
+            $response = $this->client->get($url);
+        }
+
         if($response->getStatusCode() == 200){
             return $this->anayAppContent($response->getBody()->getContents());
         }
@@ -93,7 +107,12 @@ class Games
 
         if(empty($content)){
             $url = 'https://store.steampowered.com/api/appdetails';
-            $response = $this->client->get($url, $params);
+            if(!empty($this->agent)){
+                $response = $this->agent->get($url, $params);
+            }else{
+                $response = $this->client->get($url, $params);
+            }
+
             if($response->getStatusCode() == 200){
                 $content = json_decode($response->getBody()->getContents(), true);
 
@@ -136,7 +155,12 @@ class Games
 
         if(empty($content)){
             $url = 'https://store.steampowered.com/app/';
-            $response = $this->client->get($url.$appid);
+            if(!empty($this->agent)){
+                $response = $this->agent->get($url.$appid);
+            }else{
+                $response = $this->client->get($url.$appid);
+            }
+
             if($response->getStatusCode() == 200){
                 $content = $response->getBody()->getContents();
 
