@@ -179,6 +179,63 @@ class Games
         return $data;
     }
 
+    /**
+     * 根据filter获取详情
+     * @param $appids
+     * @param $filter
+     * @return bool|mixed|string
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function gameDetailHasFilter($appids, $filter, $lang="cn", $cc = "cn")
+    {
+        if(!is_array($appids)){
+            $appids = [$appids];
+        }
+
+        $lang_arr = ['cn' => 'zh-cn;zh'];
+        $params = [];
+        $query = ['appids' => implode(",", $appids), "filters" => $filter];
+        $cache_id = md5($query['appids']);
+        if(!empty($cc)){
+            $query['cc'] = $cc;
+        }
+
+        if(!empty($lang)){
+            $query['l'] = $lang;
+            if(array_key_exists($lang, $lang_arr)){
+                $params['headers'] = ['Accept-Language'=> $lang_arr[$lang]];
+            }
+        }
+
+        $params['query'] = $query;
+        $content = "";
+        if(!empty($this->redis)){
+            $content = $this->redis->get(self::CACHE_KEY . $cache_id);
+        }
+
+        if(empty($content)){
+            $url = 'https://store.steampowered.com/api/appdetails';
+            if(!empty($this->agent)){
+                $response = $this->agent->get($url, $params);
+            }else{
+                $response = $this->client->get($url, $params);
+            }
+
+            if($response->getStatusCode() == 200){
+                $content = json_decode($response->getBody()->getContents(), true);
+
+                // 如果缓存开启
+                if(!empty($this->redis) && !empty($content)){
+                    $this->redis->set(self::CACHE_KEY . $cache_id, json_encode($content), 7200);
+                }
+            }
+        }else{
+            $content = json_decode($content, true);
+        }
+
+        return $content;
+    }
+
 
 
     /**
