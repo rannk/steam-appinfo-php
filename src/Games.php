@@ -175,6 +175,7 @@ class Games
 
         $data['reviewSummary'] = $anay->findReviewSummary();
         $data['reviewRecent'] = $anay->findReviewRecent();
+        $data['metacriticGrade'] = $anay->metacriticGrade();
 
         return $data;
     }

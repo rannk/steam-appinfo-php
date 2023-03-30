@@ -53,4 +53,19 @@ class anayAppGame
 
         return $data;
     }
+
+    public function metacriticGrade()
+    {
+        $content = $this->content;
+        $sPos = stripos($content, "game_area_metascore");
+        $grade = 0;
+        if($sPos){
+            $content = substr($content, $sPos);
+            $sPos = stripos($content, "score high") + 12;
+            $ePos = stripos($content, "</", $sPos);
+            $grade = trim(substr($content, $sPos, $ePos - $sPos));
+        }
+
+        return $grade;
+    }
 }
